@@ -7,7 +7,7 @@ module JWT
       class OKP < ::JWT::JWK::KeyBase
         KTY  = "OKP"
         KTYS = [KTY, JWT::EdDSA::JWK::OKP, Ed25519::SigningKey, Ed25519::VerifyKey].freeze
-        OKP_PUBLIC_KEY_ELEMENTS = %i[kty n x].freeze
+        OKP_PUBLIC_KEY_ELEMENTS = %i[crv kty x].freeze
         OKP_PRIVATE_KEY_ELEMENTS = %i[d].freeze
 
         def initialize(key, params = nil, options = {})

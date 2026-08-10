@@ -73,6 +73,16 @@ RSpec.describe JWT::EdDSA::JWK::OKP do
     end
   end
 
+  describe "#kid" do
+    # Test vector from RFC 8037 Appendix A.3 (JWK Thumbprint Canonicalization):
+    # https://www.rfc-editor.org/rfc/rfc8037#appendix-A.3
+    let(:key) { { kty: "OKP", crv: "Ed25519", x: "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo" } }
+
+    it "matches the RFC 7638 JWK thumbprint of the crv/kty/x members" do
+      expect(instance.kid).to eq("kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k")
+    end
+  end
+
   describe "#export" do
     let(:options) { {} }
     subject { instance.export(options) }
