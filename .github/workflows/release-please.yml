@@ -1,0 +1,56 @@
+---
+  on:
+    push:
+      branches:
+      - main
+
+  name: release-please
+  jobs:
+    release-please:
+      runs-on: ubuntu-latest
+      permissions:
+        contents: write
+        pull-requests: write
+      outputs:
+        release_created: ${{ steps.release.outputs.release_created }}
+        tag_name: ${{ steps.release.outputs.tag_name }}
+      steps:
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        id: release
+
+    push-gem:
+      needs: release-please
+      if: ${{ needs.release-please.outputs.release_created == 'true' }}
+      runs-on: ubuntu-latest
+      permissions:
+        contents: write
+        id-token: write
+      steps:
+      - uses: rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a # v2.1.0
+        with:
+          role-to-assume: rg_oidc_akr_d5dztzq4ywp3y7rd7vfp
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set remote URL
+        run: |
+          # Attribute commits to the last committer on HEAD
+          git config --global user.email "$(git log -1 --pretty=format:'%ae')"
+          git config --global user.name "$(git log -1 --pretty=format:'%an')"
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY"
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
+        with:
+          bundler-cache: true
+          ruby-version: ruby
+      - name: Release
+        run: bundle exec rake release
+      - name: Wait for release to propagate
+        run: |
+          gem install rubygems-await
+          gem_tuple="$(ruby -rbundler/setup -rbundler -e '
+              spec = Bundler.definition.specs.find {|s| s.name == ARGV[0] }
+              raise "No spec for #{ARGV[0]}" unless spec
+              print [spec.name, spec.version, spec.platform].join(":")
+            ' "jwt-eddsa")"
+          gem await "${gem_tuple}"
