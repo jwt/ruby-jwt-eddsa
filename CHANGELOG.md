@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0](https://github.com/jwt/ruby-jwt-eddsa/compare/v0.9.0...v1.0.0) (2026-08-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* Auto-generated `kid` values for OKP JWKs are now computed from the RFC 8037 required members (crv, kty, x) instead of the incorrect (kty, n, x). Previously generated kid values will no longer match; keys with an explicitly provided kid are unaffected.
+
+### Bug Fixes
+
+* Change OKP JWK thumbprint to use crv/kty/x, not RSA's kty/n/x ([#26](https://github.com/jwt/ruby-jwt-eddsa/issues/26)) ([7760623](https://github.com/jwt/ruby-jwt-eddsa/commit/77606230f99ec6f7ec5ebaab939451fea0652bff))
+* OKP JWK kid values now follow RFC 8037 thumbprints ([#26](https://github.com/jwt/ruby-jwt-eddsa/issues/26)) ([6eaf654](https://github.com/jwt/ruby-jwt-eddsa/commit/6eaf654750666d9c3122b46629eeaf9115971694))
+
 ## [0.9.0](https://github.com/jwt/ruby-jwt-eddsa/compare/v0.8.1...v0.9.0) (2025-06-28)
 
 
