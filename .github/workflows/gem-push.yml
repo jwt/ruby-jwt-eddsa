@@ -12,10 +12,12 @@
         contents: write
         id-token: write
       steps:
-      - uses: rubygems/configure-rubygems-credentials@main
+      - uses: rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a # v2.1.0
         with:
           role-to-assume: rg_oidc_akr_d5dztzq4ywp3y7rd7vfp
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Set remote URL
         run: |
           # Attribute commits to the last committer on HEAD
@@ -23,10 +25,12 @@
           git config --global user.name "$(git log -1 --pretty=format:'%an')"
           git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY"
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         with:
-          bundler-cache: true
+          bundler-cache: false
           ruby-version: ruby
+      - name: Install dependencies
+        run: bundle install
       - name: Extract version number
         run: echo "GEM_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
       - name: Release
