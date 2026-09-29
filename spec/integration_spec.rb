@@ -68,6 +68,14 @@ RSpec.describe "Usage via ruby-jwt" do
                                     { algorithms: ["EDDSA"], jwks: key_loader })
       expect(payload).to eq(token_payload)
     end
+
+    it "rejects an Ed25519 key labelled as X25519" do
+      public_jwks[:keys].first[:crv] = "X25519"
+
+      expect do
+        JWT.decode(signed_token, nil, true, algorithms: ["EdDSA"], jwks: public_jwks)
+      end.to raise_error(JWT::JWKError, /Incorrect 'crv' value/)
+    end
   end
 
   describe "JWK as key" do

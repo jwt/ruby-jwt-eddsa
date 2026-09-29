@@ -27,6 +27,9 @@ token = JWT.encode({pay: "load"}, private_key, "EdDSA")
 payload, header = JWT.decode(token, private_key.verify_key, true, algorithm: "EdDSA")
 ```
 
+OKP JWKs must specify `crv: "Ed25519"`. Importing a JWK with a missing or
+unsupported curve (including `X25519` and `Ed448`) raises `JWT::JWKError`.
+
 ## Development
 
 ```
