@@ -23,12 +23,14 @@ module JWT
         end
 
         def verify_key
+          check_curve!
           return @verify_key if defined?(@verify_key)
 
           @verify_key = verify_key_from_parameters
         end
 
         def signing_key
+          check_curve!
           return @signing_key if defined?(@signing_key)
 
           @signing_key = signing_key_from_parameters
@@ -86,18 +88,18 @@ module JWT
           end
         end
 
-        def check_jwk_params!(key_params, given_params)
-          key_params = key_params.merge(given_params)
-
-          unless key_params[:kty] == KTY
-            raise JWT::JWKError,
-                  "Incorrect 'kty' value: #{key_params[:kty]}, expected #{KTY}"
-          end
-
-          return if key_params[:crv] == "Ed25519"
+        def check_jwk_params!(key_params, _given_params)
+          return if key_params[:kty] == KTY
 
           raise JWT::JWKError,
-                "Incorrect 'crv' value: #{key_params[:crv]}, expected Ed25519"
+                "Incorrect 'kty' value: #{key_params[:kty]}, expected #{KTY}"
+        end
+
+        def check_curve!
+          return if self[:crv] == "Ed25519"
+
+          raise JWT::JWKError,
+                "Incorrect 'crv' value: #{self[:crv]}, expected Ed25519"
         end
 
         def parse_okp_key_params(verify_key, signing_key = nil)

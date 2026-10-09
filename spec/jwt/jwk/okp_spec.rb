@@ -38,27 +38,6 @@ RSpec.describe JWT::EdDSA::JWK::OKP do
       it { is_expected.to be_a(described_class) }
     end
 
-    ["X25519", "Ed448", "ed25519", nil].each do |curve|
-      context "when the curve is #{curve.inspect}" do
-        let(:key) { described_class.new(public_key).export.merge(crv: curve) }
-
-        it "rejects the JWK" do
-          expect { instance }.to raise_error(JWT::JWKError, /Incorrect 'crv' value/)
-        end
-
-        it "rejects a curve override on a native key" do
-          expect { described_class.new(private_key, "crv" => curve) }
-            .to raise_error(JWT::JWKError, /Incorrect 'crv' value/)
-        end
-      end
-    end
-
-    it "rejects a JWK without the required curve" do
-      parameters = described_class.new(public_key).export
-      parameters.delete(:crv)
-      expect { described_class.import(parameters) }.to raise_error(JWT::JWKError, /Incorrect 'crv' value/)
-    end
-
     context "when a random key found from the Internet is given" do
       let(:key) do
         {
@@ -71,6 +50,34 @@ RSpec.describe JWT::EdDSA::JWK::OKP do
       end
 
       it { is_expected.to be_a(described_class) }
+    end
+  end
+
+  describe "key access with an unsupported curve" do
+    ["X25519", "Ed448", "ed25519", nil].each do |curve|
+      context "when the curve is #{curve.inspect}" do
+        let(:key) { described_class.new(private_key).export(include_private: true).merge(crv: curve) }
+
+        it "imports the JWK but rejects signing and verification key access" do
+          jwk = instance
+          expect { jwk.verify_key }.to raise_error(JWT::JWKError, /Incorrect 'crv' value/)
+          expect { jwk.signing_key }.to raise_error(JWT::JWKError, /Incorrect 'crv' value/)
+        end
+
+        it "rejects returning a native key with a curve override" do
+          jwk = described_class.new(private_key, "crv" => curve)
+          expect { jwk.verify_key }.to raise_error(JWT::JWKError, /Incorrect 'crv' value/)
+          expect { jwk.signing_key }.to raise_error(JWT::JWKError, /Incorrect 'crv' value/)
+        end
+      end
+    end
+
+    it "rejects key access without the required curve" do
+      parameters = described_class.new(private_key).export(include_private: true)
+      parameters.delete(:crv)
+      jwk = described_class.import(parameters)
+      expect { jwk.verify_key }.to raise_error(JWT::JWKError, /Incorrect 'crv' value/)
+      expect { jwk.signing_key }.to raise_error(JWT::JWKError, /Incorrect 'crv' value/)
     end
   end
 
