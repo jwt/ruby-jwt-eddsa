@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/jwt/ruby-jwt-eddsa/compare/v1.0.0...v1.0.1) (2026-10-09)
+
+
+### Bug Fixes
+
+* reject unsupported OKP curves ([#29](https://github.com/jwt/ruby-jwt-eddsa/issues/29)) ([032cfa9](https://github.com/jwt/ruby-jwt-eddsa/commit/032cfa925ad6e123712edf2c83723a873bc6f4e7))
+
 ## [1.0.0](https://github.com/jwt/ruby-jwt-eddsa/compare/v0.9.0...v1.0.0) (2026-08-14)
 
 
