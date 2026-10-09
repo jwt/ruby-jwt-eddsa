@@ -68,6 +68,38 @@ RSpec.describe "Usage via ruby-jwt" do
                                     { algorithms: ["EDDSA"], jwks: key_loader })
       expect(payload).to eq(token_payload)
     end
+
+    it "rejects an Ed25519 key labelled as X25519" do
+      public_jwks[:keys].first[:crv] = "X25519"
+
+      expect do
+        JWT.decode(signed_token, nil, true, algorithms: ["EdDSA"], jwks: public_jwks)
+      end.to raise_error(JWT::JWKError, /Incorrect 'crv' value/)
+    end
+
+    context "with a mixed JWKS" do
+      let(:public_jwks) do
+        { keys: [
+          { kty: "OKP", crv: "X25519", use: "enc", kid: "encryption",
+            x: Base64.urlsafe_encode64("x" * 32, padding: false) },
+          { kty: "OKP", crv: "Ed448", kid: "ed448", x: Base64.urlsafe_encode64("x" * 57, padding: false) },
+          jwk.export
+        ] }
+      end
+
+      it "verifies with the selected Ed25519 key" do
+        payload, _header = JWT.decode(signed_token, nil, true, algorithms: ["EdDSA"], jwks: public_jwks)
+        expect(payload).to eq(token_payload)
+      end
+
+      it "rejects selecting an unsupported curve for EdDSA" do
+        token = JWT.encode(token_payload, jwk.signing_key, "EdDSA", kid: "ed448")
+
+        expect do
+          JWT.decode(token, nil, true, algorithms: ["EdDSA"], jwks: public_jwks)
+        end.to raise_error(JWT::JWKError, /Incorrect 'crv' value/)
+      end
+    end
   end
 
   describe "JWK as key" do

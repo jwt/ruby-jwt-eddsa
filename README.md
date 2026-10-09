@@ -27,6 +27,11 @@ token = JWT.encode({pay: "load"}, private_key, "EdDSA")
 payload, header = JWT.decode(token, private_key.verify_key, true, algorithm: "EdDSA")
 ```
 
+OKP JWKs must specify `crv: "Ed25519"` to provide a signing or verification key.
+Requesting a key with a missing or unsupported curve (including `X25519` and
+`Ed448`) raises `JWT::JWKError`. Such JWKs can still be imported, so an unrelated
+key in a mixed JWKS does not prevent verification with a selected Ed25519 key.
+
 ## Development
 
 ```
