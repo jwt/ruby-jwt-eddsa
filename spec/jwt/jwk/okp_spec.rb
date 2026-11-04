@@ -69,6 +69,20 @@ RSpec.describe JWT::EdDSA::JWK::OKP do
           expect { jwk.verify_key }.to raise_error(JWT::JWKError, /Incorrect 'crv' value/)
           expect { jwk.signing_key }.to raise_error(JWT::JWKError, /Incorrect 'crv' value/)
         end
+
+        it "still exports the JWK" do
+          jwk = instance
+          expect(jwk.private?).to eq(true)
+          expect(jwk.export).to eq(key.reject { |k, _| k == :d })
+          expect(jwk.export(include_private: true)).to eq(key)
+        end
+
+        it "exports a public JWK as not private" do
+          public_parameters = key.reject { |k, _| k == :d }
+          jwk = described_class.import(public_parameters)
+          expect(jwk.private?).to eq(false)
+          expect(jwk.export(include_private: true)).to eq(public_parameters)
+        end
       end
     end
 
