@@ -55,6 +55,54 @@ RSpec.describe "Usage via ruby-jwt" do
     end
   end
 
+  describe "RFC 9864 Ed25519 algorithm name" do
+    let(:token) { JWT.encode(payload, private_key, "Ed25519", { alg: "Ed25519" }) }
+
+    it "keeps the EdDSA header unless Ed25519 is requested" do
+      %w[EdDSA Ed25519 ED25519].each do |algorithm|
+        header = JWT::EncodedToken.new(JWT.encode(payload, private_key, algorithm)).header
+        expect(header).to eq("alg" => "EdDSA")
+      end
+    end
+
+    it "signs with the Ed25519 header when given" do
+      expect(JWT::EncodedToken.new(token).header).to eq("alg" => "Ed25519")
+    end
+
+    it "verifies an Ed25519 token when Ed25519 is allowed" do
+      expect(JWT.decode(token, public_key, true, algorithms: ["Ed25519"]))
+        .to eq([payload, { "alg" => "Ed25519" }])
+      expect(JWT.decode(token, public_key, true, algorithms: %w[EdDSA Ed25519]).first).to eq(payload)
+    end
+
+    it "accepts both names when both are allowed" do
+      eddsa_token = JWT.encode(payload, private_key, "EdDSA")
+      expect(JWT.decode(eddsa_token, public_key, true, algorithms: %w[EdDSA Ed25519]).first).to eq(payload)
+    end
+
+    it "rejects an Ed25519 token when only EdDSA is allowed" do
+      expect do
+        JWT.decode(token, public_key, true, algorithms: ["EdDSA"])
+      end.to raise_error(JWT::IncorrectAlgorithm)
+    end
+
+    it "verifies with a JWKS" do
+      jwk = JWT::JWK.new(private_key, kid: "ed25519-key")
+      token = JWT.encode(payload, private_key, "Ed25519", { alg: "Ed25519", kid: jwk.kid })
+
+      [jwk.export, jwk.export.merge(alg: "Ed25519")].each do |public_jwk|
+        decoded, = JWT.decode(token, nil, true, algorithms: ["Ed25519"], jwks: { keys: [public_jwk] })
+        expect(decoded).to eq(payload)
+      end
+    end
+
+    it "resolves a JWK with alg Ed25519 to the Ed25519 algorithm" do
+      jwk = JWT::JWK.import(JWT::JWK.new(public_key).export.merge(alg: "Ed25519"))
+      expect(jwk.jwa.alg).to eq("Ed25519")
+      expect(jwk.jwa.valid_alg?("ED25519")).to eq(true)
+    end
+  end
+
   describe "OKP JWK usage" do
     let(:jwk)           { JWT::JWK.new(Ed25519::SigningKey.new(SecureRandom.hex)) }
     let(:public_jwks)   { { keys: [jwk.export, { kid: "not_the_correct_one", kty: "oct", k: "secret" }] } }

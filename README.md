@@ -27,6 +27,31 @@ token = JWT.encode({pay: "load"}, private_key, "EdDSA")
 payload, header = JWT.decode(token, private_key.verify_key, true, algorithm: "EdDSA")
 ```
 
+### The `Ed25519` algorithm name (RFC 9864)
+
+[RFC 9864](https://www.rfc-editor.org/rfc/rfc9864) registers `Ed25519` as a
+fully-specified algorithm name and deprecates the polymorphic `EdDSA`. Both
+names use the same keys and signatures.
+
+Tokens are signed with `"alg": "EdDSA"` by default, because many verifiers only
+accept that name. To sign with the RFC 9864 name, set the header explicitly:
+
+```ruby
+token = JWT.encode({pay: "load"}, private_key, "Ed25519", { alg: "Ed25519" })
+```
+
+Verifiers only accept the names they allow. To accept tokens from issuers using
+either name, allow both:
+
+```ruby
+payload, header = JWT.decode(token, private_key.verify_key, true, algorithms: ["EdDSA", "Ed25519"])
+```
+
+`ED25519`, the name used by ruby-jwt 2.x, still resolves to the same algorithm
+and signs with `"alg": "EdDSA"`.
+
+### OKP JWKs
+
 OKP JWKs must specify `crv: "Ed25519"` to provide a signing or verification key.
 Requesting a key with a missing or unsupported curve (including `X25519` and
 `Ed448`) raises `JWT::JWKError`. Such JWKs can still be imported, so an unrelated

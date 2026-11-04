@@ -28,12 +28,17 @@ module JWT
         false
       end
 
+      # Tokens are signed with the "EdDSA" header by default, for compatibility
+      # with verifiers that only accept the RFC 8037 name. Pass the header
+      # { alg: "Ed25519" } when encoding to use the RFC 9864 name instead.
       def header(*)
         { "alg" => "EdDSA" }
       end
 
       register_algorithm(new("EdDSA"))
-      register_algorithm(new("ED25519"))
+      # The RFC 9864 name. Lookups are case-insensitive, so "ED25519" (the name
+      # used by ruby-jwt 2.x) resolves to the same algorithm.
+      register_algorithm(new("Ed25519"))
     end
   end
 end
