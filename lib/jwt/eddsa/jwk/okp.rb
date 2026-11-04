@@ -41,7 +41,7 @@ module JWT
         end
 
         def private?
-          !signing_key.nil?
+          !self[:d].nil?
         end
 
         def members

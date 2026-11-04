@@ -99,6 +99,10 @@ RSpec.describe "Usage via ruby-jwt" do
           JWT.decode(token, nil, true, algorithms: ["EdDSA"], jwks: public_jwks)
         end.to raise_error(JWT::JWKError, /Incorrect 'crv' value/)
       end
+
+      it "exports the whole set" do
+        expect(JWT::JWK::Set.new(public_jwks).export).to eq(public_jwks)
+      end
     end
   end
 
