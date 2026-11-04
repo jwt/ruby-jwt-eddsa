@@ -50,7 +50,7 @@
         env:
           TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
       - name: Release
-        run: bundle exec rake release
+        run: bundle exec rake release:rubygem_push
       - name: Wait for release to propagate
         run: |
           gem install rubygems-await
